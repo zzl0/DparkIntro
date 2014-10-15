@@ -1,0 +1,15 @@
+digraph pipeline {
+    rankdir = LR;
+    node [shape="Mrecord"]
+
+    "access-log" [shape="plaintext"];
+    wwwlog;
+    bytecolumn;
+    bytes;
+    total [shape="plaintext"];
+
+    "access-log" -> wwwlog;
+    wwwlog -> bytecolumn [label="map"];
+    bytecolumn -> bytes [label="map"];
+    bytes -> total [label="sum"];
+}

@@ -5,6 +5,7 @@ tags: DPark
 comments: yes
 og_image_url: ""
 description: "本篇主要介绍了什么是 DPark，为什么用 DPark，以及 DPark 的使用示例"
+date: 2014-10-13
 ---
 
 注: 本篇是 [DPark 漫谈系列](./00-dpark.md)的第一篇.
@@ -97,7 +98,7 @@ Hadoop MR 基本思想就是这样，在 Hadoop MR 中 bytecolumn、bytes
 这样的中间数据是会落到磁盘上的。这也就给我们带来了一个问题，
 我们能不能省掉这些中间的数据呢？
 
-### generate 方式
+### Generate 方式
 
 如何省掉中间数据呢，我们先看看 python 是怎么做的，
 很多前辈注意到 list comprehension 会产生中间列表，浪费空间。其中
@@ -120,7 +121,7 @@ LazyData 实现相应的 map、reduce 等操作的接口封装分布式相关任
 事实上 DPark 正是这么做的，只不过 LazyData 被称之为 RDD (Resilient Distributed Dataset)，
 而且多了一些接口，如 flatMap、filter、reduceByKey、collect 等，这些后面用到时都会介绍。
 
-### dpark 方式
+### DPark 方式
 
 ``` python
 wwwlog = dpark.textFile("access-log")

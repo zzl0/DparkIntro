@@ -5,6 +5,7 @@ tags: DPark
 comments: yes
 og_image_url: ""
 description: "Dpark 系列文章的目录."
+date: 2014-08-05
 ---
 
 接下来的一段时间我打算写一个 Dpark 系列的文章。

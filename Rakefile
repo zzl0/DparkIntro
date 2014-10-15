@@ -4,6 +4,9 @@ SOURCE_FILES = Rake::FileList.new("**/*.dot")
 
 task :default => :png
 task :png => SOURCE_FILES.ext(".png")
+task :sync do
+    sh "python tools/sync2blog.py"
+end
 
 def source_for_png(name)
     SOURCE_FILES.detect {|f| f.ext('') == name.ext('')}

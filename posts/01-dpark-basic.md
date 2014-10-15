@@ -7,7 +7,7 @@ og_image_url: ""
 description: "本篇主要介绍了什么是 DPark，为什么用 DPark，以及 DPark 的使用示例"
 ---
 
-注: 本篇是 [DPark 漫谈系列](/2014/08/05/dpark/)的第一篇.
+注: 本篇是 [DPark 漫谈系列](./00-dpark.md)的第一篇.
 
 ## 什么是 DPark
 

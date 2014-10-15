@@ -16,7 +16,7 @@ description: "Dpark 系列文章的目录."
 
 下面是该系列的一个大概的提纲，在写的过程中可能会调整。
 
-第一章 [简介](/2014/10/13/dpark-basic/)
+第一章 [简介](./01-dpark-basic.md)
 
 1. 什么是 DPark
 2. Why DPark

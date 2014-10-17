@@ -1,0 +1,1 @@
+git+git://github.com/douban/dpark.git#egg=dpark

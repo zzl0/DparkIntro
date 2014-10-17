@@ -197,3 +197,28 @@ $ python wc.py -m mesos shakespeare.txt
 
 本文简单介绍了 DPark 是什么，并通过一个示例一步一步引出为什么要 DPpark，
 最后给出了一个真实的使用场景。
+
+## 练习
+
+注：每一道习题的答案（或者提示）都在[这里](https://github.com/zzl0/DparkIntro/tree/master/solutions)。
+
+1. 尝试运行 wc.py 程序。
+2. 写一个 flat_map 函数，使得其中的测试可以通过。
+
+``` python
+def flat_map(data, func):
+    """
+    >>> flat_map(["this is a test", "this is another test"], parse_words)
+    [('this', 1), ('is', 1), ('a', 1), ('test', 1), ('this', 1), ('is', 1), ('another', 1), ('test', 1)]
+    """
+    def flat(lst):
+        """ write your code here """
+
+    return flat(map(func, data))
+```
+
+
+
+
+
+

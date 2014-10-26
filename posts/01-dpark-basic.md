@@ -216,9 +216,3 @@ def flat_map(data, func):
 
     return flat(map(func, data))
 ```
-
-
-
-
-
-

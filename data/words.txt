@@ -1,0 +1,5 @@
+Structure and Interpretation of Computer Programs
+How to Design Programs
+Python Programming: An Intro to CS
+Concepts, Techniques, and Models of Computer Programming
+On Lisp

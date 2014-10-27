@@ -31,6 +31,7 @@ class Split(object):
     def __str__(self):
         return 'Split<%s>' % self.index
 
+
 class TextFileRDD(object):
     DEFAULT_SPLIT_SIZE = 64 << 20  # 64M
 
@@ -92,6 +93,7 @@ class TextFileRDD(object):
     def map(self, f):
         return MappedRDD(self, f)
 
+
 class MappedRDD(object):
 
     def __init__(self, prev, f):
@@ -112,6 +114,7 @@ class MappedRDD(object):
 好了，写了这么多我们来测试一下代码（[完整代码](../src/rdd.py), [测试数据](../data/words.txt)）
 
 ```
+$ python src/rdd.py
 TextFileRDD
 ======= Split<0> =======
 ['Structure and Interpretation of Computer Programs\n', 'How to Design Programs\n']
@@ -159,15 +162,6 @@ Each RDD is characterized by five main properties:
 - Optionally, a list of prefered locations to compute each split on
 ```
 
-### 小结
-
-在这里我们去尝试实现一些简单的 RDD，从而理解其工作的原理，然后总结归纳出一些信息，
-再来和实际情况对比，验证我们的理解以及不足。其实这也是我个人比较喜欢的一种学习方式，
-我不想就给大家一个关于 RDD 是什么定义。
-
-这种方式有一个缺点（优点？）：我们会在总结归纳的时候犯错。
-
-
 ## 词频统计剖析
 
 [上篇](./01-dpark-basic.md)结束时，我们给出了一个词频统计的示例，
@@ -208,7 +202,11 @@ if __name__ == '__main__':
     main()
 ```
 
-我们从 main 函数开始解释每一行的含义。
+其 RDD 的逻辑图如下所示：
+
+![wc rdd](/img/dpark/wc-rdd.png)
+
+下面我们从 main 函数开始解释每一行的含义。
 
 - `dc = dpark.DparkContext()`，DparkContext 是获得 DPark 功能的主要入口，
 它设置了 DPark 一些重要的属性，并且可以用来创建 RDD 和广播一些大的数据集。
@@ -238,6 +236,12 @@ TextFileRDD 实例，并在设置了分块大小等参数，我们使用的是 2
 
 ## 小结
 
+在这里我们去尝试实现一些简单的 RDD，从而理解其工作的原理，然后总结归纳出一些信息，
+再来和实际情况对比，验证我们的理解以及不足。其实这也是我个人比较喜欢的一种学习方式，
+我不想就给大家一个关于 RDD 是什么定义。这种方式有一个缺点（优点？）：我们会在总结归纳的时候犯错。
+
+然后我们剖析了词频统计的例子，同时给出了 RDD 接口的一个应用示例。
+
 ## 练习
 
-
+1. 平均响应时间

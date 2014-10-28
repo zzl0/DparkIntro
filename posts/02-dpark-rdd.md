@@ -15,8 +15,8 @@ date: 2014-10-26
 RDD（Resilient Distributed Dataset）是 DPark 的核心概念。
 它是一个分布式的惰性的数据集，[上篇](./01-dpark-basic.md)
 中我们提到可以自己构造一个 LazyData，并为其添加 map
-等接口就可以得到一个类似 RDD 的类，现在我们就来尝试一下，
-我们在这里要实现的 TextFileRDD（之所以取找个名字是为了和 Dpark 兼容），
+等接口就可以得到一个类似 RDD 的东西，现在我们就来尝试一下，
+我们在这里要实现的 TextFileRDD（之所以取这个名字是为了和 Dpark 兼容），
 这个 RDD 的作用是从文件系统读取文件，并进行数据划分。
 
 ### 基本的 RDD

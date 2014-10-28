@@ -13,13 +13,16 @@ date: 2014-10-26
 ## RDD from scratch
 
 RDD（Resilient Distributed Dataset）是 DPark 的核心概念。
-[上篇](./01-dpark-basic.md)中我们提到词频统计的示例，我们来尝试自己写一个 TextFileRDD。
-这个 RDD 是由 dpark.textFile 方法产生。
+它是一个分布式的惰性的数据集，[上篇](./01-dpark-basic.md)
+中我们提到可以自己构造一个 LazyData，并为其添加 map
+等接口就可以得到一个类似 RDD 的类，现在我们就来尝试一下，
+我们在这里要实现的 TextFileRDD（之所以取找个名字是为了和 Dpark 兼容），
+这个 RDD 的作用是从文件系统读取文件，并进行数据划分。
 
 ### 基本的 RDD
 
 首先我们需要知道文件的路径以及分块的大小，这样我们就可以把一个大文件分成多个小块来处理
-（DPark 中我们把一个分块称之为 split），如下所示，我们把文件按照 splitSize 划分为
+（DPark 中把一个分块称之为 split），如下所示，我们把文件按照 splitSize 划分为
 n 块儿。你可能注意到这里 splitSize 的命名方式是驼峰式的，我猜想是为了和 Spark
 保持一致吧，后面我们会看到很多 RDD 的接口都是驼峰的方式。
 
@@ -83,8 +86,8 @@ class TextFileRDD(object):
 
 ### 添加 map 接口
 
-现在我们有了一个 RDD 但是没有为其增加一些编程接口方便我们使用，
-下面我们来实现一个简单的 map 接口，该方法的返回值仍然是一个 RDD
+现在我们有了一个 RDD 但是没有为其增加一些编程接口以方便我们使用，
+下面就来实现一个简单的 map 接口，该方法的返回值仍然是一个 RDD
 （即 MappedRDD）。
 
 ``` python
@@ -134,7 +137,7 @@ MappedRDD
 
 ### RDD 的特性
 
-我们已经实现了两个简陋的 RDD，虽然样本较少，但是我们还是努力来总结一下 RDD 有哪些共性，
+虽然我们只是实现了两个简陋的 RDD，但是我们还是要努力来总结一下 RDD 有哪些共性，
 
 - RDD 可以由两种方式创建：1）存储设备中的数据(e.g 文件)；2）其他 RDD（e.g map 操作）。
 - RDD 并不是一个计算好的数据集合，它只是包含了`源数据`（lineage，也翻译叫血统）是什么，以及`如何计算`，
@@ -145,11 +148,10 @@ MappedRDD
 目前，我们差不多可以得到这么多信息，下面是我从 Spark 代码（很遗憾，DPark 的代码注释信息比较少）
 中摘出来的关于 RDD 的注释，前三个我们的例子中都有涉及，但是最后两个并没有接触到，这是因为：
 
-- 我们还没有实现 key-value 相关的操作（e.g. reduceByKey），DPark 允许我们自定义
-partition 来对 key 进行分组。
+- 我们还没有实现 key-value 相关的操作（e.g. reduceByKey 就用到了 hash-partition）
 - 关于 prefered locations，我们代码中也没有体现。但这的真实环境中比较重要，
-例如我们可以得到一个文件在分布式文件系统中的位置，从而我们可以在运行的时候，
-让任务运行在文件数据所在的机器上，提高系统性能。
+例如我们可以得到一个文件在分布式文件系统中的位置，从而可以在运行的时候，
+让任务运行在文件所在的机器上，提高系统性能。
 
 ```
 A Resilient Distributed Dataset (RDD), the basic abstraction in MDpark.
@@ -161,6 +163,9 @@ Each RDD is characterized by five main properties:
 - Optionally, a Partitioner for key-value RDDs (e.g hash-partitioned)
 - Optionally, a list of prefered locations to compute each split on
 ```
+
+我们自己的尝试就到这里停止了，下面我们通过分析词频统计的例子，
+来看看 DPark 中的不同 RDD。
 
 ## 词频统计剖析
 
@@ -228,9 +233,10 @@ TextFileRDD 实例，并在设置了分块大小等参数。这里为了体现�
 faltMap 的效果可以参考[上篇](./01-dpark-basic.md)中的习题2，
 熟悉函数式语言的同学应该对这个方法比较熟悉。
 
-- `reduceByKey(lambda x, y: x + y)`，这是我们遇到的第一个关于 key-value 的
-接口，其作用是把前一步骤中的数据按照 key 进行合并操作，合并的方式就是我们传给它的那个
-lambda 函数。另外，该方法在本地会先执行合并操作，然后把合并的结果按照 hash-partitioned
+- `reduceByKey(lambda x, y: x + y)`，其返回值是 ShuffledRDD,
+这是我们遇到的第一个关于 key-value 的接口，其作用是把前一步骤中的数据按照
+key 进行合并操作，合并的方式就是我们传给它的那个
+lambda 函数。另外，该方法在本地会先执行合并操作，然后把合并的结果按照 hash-partition
 发送给不同 reducer 进行最终的合并操作。大家可能注意到了，图中 reducer
 的个数和前面不一样了，一般来说 reducer 的个数和 mapper 的个数是不一样的，
 reduceByKey 也提供了一个参数让我们可以改变 reducer 的个数，
@@ -247,17 +253,19 @@ reduceByKey 也提供了一个参数让我们可以改变 reducer 的个数，
 
 ## RDD 接口及其应用
 
-RDD 的接口可以分为两大类
+RDD 的提供了丰富的编程接口（相对于 Hadoop MR 而言），可以让我们灵活的处理数据。
+其接口主要分为两大类：
 
 - transformation，例如 map、filter、reduceByKey，这类接口主要是通过变化
 生成新的 RDD，由于 RDD 是惰性的，这时候不会进行真正的计算。
 - action，例如 top、count、saveAsTextFile，这类接口会触发 RDD 的计算，
 并把结果返回给调用程序，或者写入文件。
 
-关于这些接口的具体含义请参考
-[DPark 文档](https://github.com/douban/dpark/blob/master/docs/guide_full.rst)
-，建议初学按照里面的例子敲一遍代码。当你熟悉了文档中的内容，接下来的文档就是
-[rdd 源码](https://github.com/douban/dpark/blob/master/dpark/rdd.py)了。
+关于这些接口的具体含义请参考：
+
+-[DPark 文档](https://github.com/douban/dpark/blob/master/docs/guide_full.rst)
+，建议初学按照里面的例子敲一遍代码。
+-[rdd 源码](https://github.com/douban/dpark/blob/master/dpark/rdd.py)了。
 
 你可能注意到了
 [DPark 文档](https://github.com/douban/dpark/blob/master/docs/guide_full.rst)
@@ -267,20 +275,20 @@ RDD 的接口可以分为两大类
 
 ### 应用
 
-*问题场景*
+- *问题场景*
 
 假设我们有截止到今天的所有老用户的集合，以及今天的所有用户集合，请问如何得到出今天的新用户？
 
-*换个方式描述*
+- *换个方式描述*
 
 我们把今天的所有用户集合记为 users，老用户集合记为 old_users，
 那么今天的新增用户就是 users - old_users，即我们现在的问题是
-如果求两个大集合的差集。
+如何求两个大集合的差集。
 
-题外话：刚开始我们的思路用 bloomfilter 检测当天的用户是否为新用户，但是我们的 bloomfilter
+题外话：刚开始我们的思路是用 bloomfilter 检测当天的用户是否为新用户，但是我们 bloomfilter
 服务要求并发度控制在 5 以下，不然会把服务器的 CPU 跑满，这个并行度太低了，所以就用了 DPark。
 
-*代码*
+- *代码*
 
 ``` python
 # coding: utf-8
@@ -310,12 +318,12 @@ if __name__ == '__main__':
 
 1. 多参阅 [DPark 文档](https://github.com/douban/dpark/blob/master/docs/guide_full.rst)
 2. RDD 有一个 `take(n)` 方法，这个方法可以返回 RDD 的前 n 个元素。大家如果不理解上面的程序，
-可以修改上面的[代码](../src/set-diff.py)打印出每个 RDD 的元素看看是什么样子的。
+可以修改上面的[代码](../src/set-diff.py)，打印出每个 RDD 的元素看看是什么样子的。
 
 ## 小结
 
-在这里我们去尝试实现一些简单的 RDD，从而理解其工作的原理，然后总结归纳出一些信息，
-再来和实际情况对比，验证我们的理解以及不足。然后我们剖析了词频统计的例子，
+在这里我们先尝试了实现一些简单的 RDD，从而理解其工作的原理，然后总结归纳出一些信息，
+再来和实际情况对比，发现我们的理解中的不足。然后我们剖析了词频统计的例子，
 同时给出了 RDD 接口的一个应用示例。
 
 ## 练习

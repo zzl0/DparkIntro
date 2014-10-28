@@ -265,7 +265,7 @@ RDD 的提供了丰富的编程接口（相对于 Hadoop MR 而言），可以�
 
 - [DPark 文档](https://github.com/douban/dpark/blob/master/docs/guide_full.rst)
 ，建议初学按照里面的例子敲一遍代码。
-- [rdd 源码](https://github.com/douban/dpark/blob/master/dpark/rdd.py)了。
+- [rdd 源码](https://github.com/douban/dpark/blob/master/dpark/rdd.py)。
 
 你可能注意到了
 [DPark 文档](https://github.com/douban/dpark/blob/master/docs/guide_full.rst)

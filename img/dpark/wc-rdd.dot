@@ -13,10 +13,10 @@ digraph G {
     }
 
     subgraph cluster_1 {
-        b0 [label="[('a',1), ('b',2) ...]"];
-        b1 [label="[('b',1), ('c',3) ...]"];
-        b2 [label="[('a',1), ('c',2) ...]"];
-        label = "FlatMappRDD";
+        b0 [label="[('a',1), ('b',1) ...]"];
+        b1 [label="[('b',1), ('c',1) ...]"];
+        b2 [label="[('a',1), ('c',1) ...]"];
+        label = "FlatMapRDD";
     }
 
     subgraph cluster_2 {

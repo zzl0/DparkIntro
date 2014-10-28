@@ -23,8 +23,15 @@ date: 2014-08-05
 2. Why DPark
 3. 应用示例
 4. 小结
+5. 练习
 
 第二章 [RDD](./02-dpark-rdd.md)
+
+1. RDD from scratch
+2. 词频统计剖析
+3. RDD 接口及其应用
+4. 小结
+5. 练习
 
 第三章 整体流程
 

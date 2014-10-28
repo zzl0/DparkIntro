@@ -138,7 +138,7 @@ MappedRDD
 
 - RDD 可以由两种方式创建：1）存储设备中的数据(e.g 文件)；2）其他 RDD（e.g map 操作）。
 - RDD 并不是一个计算好的数据集合，它只是包含了`源数据`（lineage，也翻译叫血统）是什么，以及`如何计算`，
-而只是在需要的时候通过上面的信息计算数据集合。这样的一个好处就是当一个分块丢失时，
+并在需要的时候通过上面的信息计算数据集合。这样的一个好处就是当一个分块丢失时，
 我们只需要根据这个分块的血统信息，重新构造出这部分数据。
 - RDD 的分块信息，即有 split 相关的信息。
 
@@ -202,7 +202,7 @@ if __name__ == '__main__':
     main()
 ```
 
-其 RDD 的逻辑图如下所示：
+其 RDD 的逻辑图如下所示，图中的例子是伪造的，主要是为了画图方便：
 
 ![wc rdd](/img/dpark/wc-rdd.png)
 
@@ -212,36 +212,121 @@ if __name__ == '__main__':
 它设置了 DPark 一些重要的属性，并且可以用来创建 RDD 和广播一些大的数据集。
 
 - 接下来两行利用了的 optParser，来获得我们从命令行传入的文件名称。
-关于命令行参数需要注意的是 DPark 的框架所需要的参数要放在自己应用的参数前面。
+关于命令行参数需要注意的是 DPark 的所需要的参数要放在自己应用的参数前面。
 例如，我们可以 `python wc.py -m mesos shakespeare.txt` 这样调用，
 但是不可以 `python wc.py shakespeare.txt -m mesos`，
 因为 DPark 的参数解析器看到第一个不能识别的参数时就会放弃对后面参数的解析，
-之所以这样做是因为用户传的一些可选参数并不希望 DPark 去解析，
-具体[参见](https://github.com/douban/dpark/blob/master/docs/faq.rst)。
+具体原因[参见](https://github.com/douban/dpark/blob/master/docs/faq.rst)。
 
 - `data = dc.textFile(file_path, splitSize=2<<20)`，textFile 函数从 moosefs
 文件系统或者本地文件系统读取文本文件，并返回一个 RDD。这里返回的是 TextFileRDD。
 由于 RDD 都是惰性计算的，所以这个时候并没有进行任何数据的计算，只是生成了一个
-TextFileRDD 实例，并在设置了分块大小等参数，我们使用的是 2M，
-分块大小默认情况下是 64M，之所以改成这么小的值是因为我们的测试文本集只有 4.3M，
-为了体现出分块的效果，所以设置为 2M。实际应用中这个参数的设置会影响程序的性能，
-我们会在性能优化一节中来给一些建议，本篇中不用在意这点。
+TextFileRDD 实例，并在设置了分块大小等参数。这里为了体现出分块的效果, 我们设置为 2M
+（因为我们的测试文本集只有 4.3M）。实际应用中这个参数的 默认值为 64M。
 
+- `flatMap(parse_words)`, flatMap 是 RDD 的一个方法，其返回值是 FlatMapRDD。
+faltMap 的效果可以参考[上篇](./01-dpark-basic.md)中的习题2，
+熟悉函数式语言的同学应该对这个方法比较熟悉。
 
-- flatMap 和 reduceByKey 都是 RDD 的变化操作。
+- `reduceByKey(lambda x, y: x + y)`，这是我们遇到的第一个关于 key-value 的
+接口，其作用是把前一步骤中的数据按照 key 进行合并操作，合并的方式就是我们传给它的那个
+lambda 函数。另外，该方法在本地会先执行合并操作，然后把合并的结果按照 hash-partitioned
+发送给不同 reducer 进行最终的合并操作。大家可能注意到了，图中 reducer
+的个数和前面不一样了，一般来说 reducer 的个数和 mapper 的个数是不一样的，
+reduceByKey 也提供了一个参数让我们可以改变 reducer 的个数，
+但是我们不能把它设置的过大，因为每个 mapper 都要和每个 reducer 通信，
+这会增加 IO 和内存开销，所以默认情况下的 reducer 个数是 12 个，
+这个对于有些应用来过于小了，导致任务运行太久，所以当你看到你的任务在 reducer
+花的时间过多时，可以考虑增加这个参数。
 
-- top 是一个动作。
+- `top(10, key=lambda x: x[1])`，获得 top 10 的单词，这个函数会触发整个 DPark
+程序的执行，该方法的实现大致逻辑就是先在每个 Split 拿到 top 10 的数据，
+然后从这些临时的优胜者中算出最终的 top 10。图中并没有画这个步骤，
+因为这个函数会触发 DPark 执行之后，我们得到的就是 Python 的数据了，
+而不再是 RDD 了。
 
 ## RDD 接口及其应用
+
+RDD 的接口可以分为两大类
+
+- transformation，例如 map、filter、reduceByKey，这类接口主要是通过变化
+生成新的 RDD，由于 RDD 是惰性的，这时候不会进行真正的计算。
+- action，例如 top、count、saveAsTextFile，这类接口会触发 RDD 的计算，
+并把结果返回给调用程序，或者写入文件。
+
+关于这些接口的具体含义请参考
+[DPark 文档](https://github.com/douban/dpark/blob/master/docs/guide_full.rst)
+，建议初学按照里面的例子敲一遍代码。当你熟悉了文档中的内容，接下来的文档就是
+[rdd 源码](https://github.com/douban/dpark/blob/master/dpark/rdd.py)了。
+
+你可能注意到了
+[DPark 文档](https://github.com/douban/dpark/blob/master/docs/guide_full.rst)
+中提到了窄依赖、宽依赖、job、stage、task 等概念，别担心我们会在下一篇中介绍这些，
+这些对于理解性能和最终的执行方式有关。对于写一个 DPark 程序，我们暂时可以不管这些，
+我希望大家在看完本篇后，就可以处理一些简单的任务了。
+
+### 应用
+
+*问题场景*
+
+假设我们有截止到今天的所有老用户的集合，以及今天的所有用户集合，请问如何得到出今天的新用户？
+
+*换个方式描述*
+
+我们把今天的所有用户集合记为 users，老用户集合记为 old_users，
+那么今天的新增用户就是 users - old_users，即我们现在的问题是
+如果求两个大集合的差集。
+
+题外话：刚开始我们的思路用 bloomfilter 检测当天的用户是否为新用户，但是我们的 bloomfilter
+服务要求并发度控制在 5 以下，不然会把服务器的 CPU 跑满，这个并行度太低了，所以就用了 DPark。
+
+*代码*
+
+``` python
+# coding: utf-8
+import dpark
+
+
+def set_diff(rdd1, rdd2):
+    """
+    Return an RDD with elements in rdd1 but not in rdd2.
+    """
+    pair_rdd1 = rdd1.map(lambda x: (x, None))
+    pair_rdd2 = rdd2.map(lambda x: (x, 1))
+    return pair_rdd1.leftOuterJoin(pair_rdd2)\
+                    .filter(lambda x: not x[1][1])\
+                    .map(lambda x: x[0])
+
+
+if __name__ == '__main__':
+    rdd1 = dpark.parallelize([1, 2, 3, 4])
+    rdd2 = dpark.parallelize([3, 4, 5, 6])
+    diff = set_diff(rdd1, rdd2)
+    rs = diff.collect()
+    assert sorted(rs) == [1, 2]  # DPark 不保证顺序
+```
+
+这里我就不逐行解释了，对于这个程序的理解留作练习吧，不过我还是要给两个建议：
+
+1. 多参阅 [DPark 文档](https://github.com/douban/dpark/blob/master/docs/guide_full.rst)
+2. RDD 有一个 `take(n)` 方法，这个方法可以返回 RDD 的前 n 个元素。大家如果不理解上面的程序，
+可以修改上面的[代码](../src/set-diff.py)打印出每个 RDD 的元素看看是什么样子的。
 
 ## 小结
 
 在这里我们去尝试实现一些简单的 RDD，从而理解其工作的原理，然后总结归纳出一些信息，
-再来和实际情况对比，验证我们的理解以及不足。其实这也是我个人比较喜欢的一种学习方式，
-我不想就给大家一个关于 RDD 是什么定义。这种方式有一个缺点（优点？）：我们会在总结归纳的时候犯错。
-
-然后我们剖析了词频统计的例子，同时给出了 RDD 接口的一个应用示例。
+再来和实际情况对比，验证我们的理解以及不足。然后我们剖析了词频统计的例子，
+同时给出了 RDD 接口的一个应用示例。
 
 ## 练习
 
-1. 平均响应时间
+1. 执行上面求集合差集的程序，并把玩它，直到弄懂。
+2. 写 DPark 程序求每个 url 的平均响应时间，假设我们都数据格式如下所示
+
+```
+url response_time
+www.douban.com 300
+book.douban.com 700
+www.douban.com 340
+...
+```

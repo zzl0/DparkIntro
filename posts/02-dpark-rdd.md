@@ -114,7 +114,8 @@ class MappedRDD(object):
         return (self.f(x) for x in self.prev.compute(split))
 ```
 
-好了，写了这么多我们来测试一下代码（[完整代码](../src/rdd.py), [测试数据](../data/words.txt)）
+好了，写了这么多我们来测试一下代码（[完整代码](https://github.com/zzl0/DparkIntro/blob/master/src/rdd.py),
+[测试数据](https://github.com/zzl0/DparkIntro/blob/master/data/words.txt)）
 
 ```
 $ python src/rdd.py
@@ -318,7 +319,8 @@ if __name__ == '__main__':
 
 1. 多参阅 [DPark 文档](https://github.com/douban/dpark/blob/master/docs/guide_full.rst)
 2. RDD 有一个 `take(n)` 方法，这个方法可以返回 RDD 的前 n 个元素。大家如果不理解上面的程序，
-可以修改上面的[代码](../src/set-diff.py)，打印出每个 RDD 的元素看看是什么样子的。
+可以修改上面的[代码](https://github.com/zzl0/DparkIntro/blob/master/src/set-diff.py)，
+打印出每个 RDD 的元素看看是什么样子的。
 
 ## 小结
 

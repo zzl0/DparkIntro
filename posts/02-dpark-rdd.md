@@ -57,12 +57,12 @@ class TextFileRDD(object):
 ```
 
 这里的 split 只是一个简单的索引，当调度程序要计算该 RDD 的一个分块时，
-会调用它的 iterator 方法来获得一个分块的元素。由于 DPark 在处理文件时是按行来处理的，
+会调用它的 compute 方法来获得一个分块的元素。由于 DPark 在处理文件时是按行来处理的，
 所以当一个 split 的 end 边界值在文本行的中间位置时，该 split 会读取完整的行，
-相应地，下一个 split 在读取数据时，要忽略（skip 变量的意义）已经被上一个 split 读取的部分。
+相应地，下一个 split 在读取数据时，要跳过（skip 变量的意义）已经被上一个 split 读取的部分。
 
 ``` python
-    def iterator(self, split):
+    def compute(self, split):
         with open(self.path) as f:
             start = split.index * self.splitSize
             end = start + self.splitSize

@@ -33,13 +33,14 @@ date: 2014-08-05
 4. 小结
 5. 练习
 
-第三章 编写一个基于 Mesos 的分布式计算框架
+第三章 [编写一个基于 Mesos 的分布式框架](./03-mesos.md)
 
 1. 什么是 Mesos
-2. Mesos API
-3. 简单的分布式计算框架
-4. 小结
-5. 练习
+2. Mesos 的设计
+3. DRF: Dominant Resource Fairness
+4. 简单的分布式计算框架
+5. 小结
+6. 练习
 
 第四章 整体流程
 

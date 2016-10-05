@@ -52,8 +52,7 @@ def sync_img(blog_dir):
 
 
 def main():
-    import sys
-    blog_dir = '/Users/zzl/projects/blog/zzl0.github.com'
+    blog_dir = '/Users/zhuzhaolong/projects/blog/zzl0.github.com'
 
     sync_markdown(blog_dir)
     sync_img(blog_dir)

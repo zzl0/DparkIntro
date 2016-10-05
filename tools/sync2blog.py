@@ -37,10 +37,10 @@ def sync_markdown(blog_dir):
             fout.write(content)
 
 def gen_url(filename):
-    "2014-10-13-dpark-basic.md -> /2014/10/13/dpark-basic/"
+    "2014-10-13-dpark-basic.md -> /2014/10/13/dpark-basic.html"
     parts = filename[:-3].split('-')
     date, name = '/'.join(parts[:3]), '-'.join(parts[3:])
-    return '/' + date + '/' + name + '/'
+    return '/' + date + '/' + name + '.html'
 
 
 def sync_img(blog_dir):
